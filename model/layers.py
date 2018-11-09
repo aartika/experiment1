@@ -47,7 +47,7 @@ class GatedAttentionLayer(tf.keras.layers.Layer):
         alphas = tf.reshape(alphas, M_shape)
         print('alphas ' + str(alphas))
         print('self.mask ' + str(self.mask))
-        alphas_r = tf.multiply(alphas, tf.to_float32(self.mask[:,np.newaxis,:])) # B x N x Q
+        alphas_r = tf.multiply(alphas, self.mask[:,np.newaxis,:]) # B x N x Q
         print('alphas_r ' + str(alphas_r))
         alphas_r = tf.divide(alphas_r, tf.keras.backend.sum(alphas_r, axis=2)[:,:,np.newaxis]) # B x N x Q
         print('alphas_r ' + str(alphas_r))

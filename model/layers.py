@@ -47,7 +47,7 @@ class GatedAttentionLayer(tf.keras.layers.Layer):
         alphas = tf.reshape(alphas, M_shape)
         print('alphas ' + str(alphas))
         print('self.mask ' + str(self.mask))
-        alphas_r = tf.multiply(alphas, self.mask[:,np.newaxis,:]) # B x N x Q
+        alphas_r = tf.multiply(alphas, tf.to_float32(self.mask[:,np.newaxis,:])) # B x N x Q
         print('alphas_r ' + str(alphas_r))
         alphas_r = tf.divide(alphas_r, tf.keras.backend.sum(alphas_r, axis=2)[:,:,np.newaxis]) # B x N x Q
         print('alphas_r ' + str(alphas_r))
@@ -111,7 +111,7 @@ class AttentionSumLayer(tf.keras.layers.Layer):
         indices = tf.concat([tf.reshape(tf.range(batch_size), [batch_size, 1]), self.pointer], axis=1)
         print('indices ' + str(indices))
         q = tf.gather_nd(inputs[1], indices) # B x D
-        p = tf.keras.backend.batch_dot(inputs[0],q) # B x N
+        p = tf.keras.backend.batch_dot(inputs[0], q) # B x N
         p = tf.Print(p, [tf.shape(p), tf.shape(self.mask), tf.shape(inputs[0])])
         pm = tf.nn.softmax(p)*self.mask # B x N
         pm = pm/tf.keras.backend.sum(pm, axis=1)[:,np.newaxis] # B x N

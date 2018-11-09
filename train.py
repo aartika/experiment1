@@ -35,13 +35,13 @@ def main(save_path, params):
 
     print("building network ...")
     W_init, embed_dim, = Helpers.load_word2vec_embeddings(data.dictionary[0], word2vec)
-    m = GAReader.Model(nlayers, data.vocab_size, data.num_chars, W_init, 
-            nhidden, embed_dim, dropout, train_emb, 
-            char_dim, use_feat, gating_fn).build_network()
-    m.compile(optimizer=tf.train.AdamOptimizer(0.01),
-              loss=tf.keras.losses.categorical_crossentropy,
-              metrics=[tf.keras.metrics.categorical_accuracy])
-    
+    with tf.device('/gpu:0'):
+        m = GAReader.Model(nlayers, data.vocab_size, data.num_chars, W_init, 
+                nhidden, embed_dim, dropout, train_emb, 
+                char_dim, use_feat, gating_fn).build_network()
+        m.compile(optimizer=tf.train.AdamOptimizer(0.01),
+                  loss=tf.keras.losses.categorical_crossentropy,
+                  metrics=[tf.keras.metrics.categorical_accuracy])
 
     print("running GAReader ...")
     with tf.Graph().as_default():

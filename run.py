@@ -14,7 +14,7 @@ parser.add_argument('--mode', dest='mode', type=int, default=0,
 parser.add_argument('--nlayers', dest='nlayers', type=int, default=3,
         help='Number of reader layers')
 parser.add_argument('--dataset', dest='dataset', type=str, default='wdw',
-        help='Dataset - (cnn || dailymail || cbtcn || cbtne || wdw)')
+        help='Dataset - (cnn || dailymail || data/cbt/cn || cbtne || wdw)')
 parser.add_argument('--seed', dest='seed', type=int, default=1,
         help='Seed for different experiments with same settings')
 parser.add_argument('--gating_fn', dest='gating_fn', type=str, default='T.mul',

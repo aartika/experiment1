@@ -88,19 +88,19 @@ class Model():
                 m_c.astype('int8'), f, cl)
 
     def build_network(self):
-        l_docin = tf.keras.layers.Input(shape=(None,))
+        l_docin = tf.keras.layers.Input(shape=(None,), dtype=tf.int64)
         #l_doctokin = L.InputLayer(shape=(None,None), input_var=self.inps[1])
-        l_qin = tf.keras.layers.Input(shape=(None,))
+        l_qin = tf.keras.layers.Input(shape=(None,), dtype=tf.int64)
         #l_qtokin = L.InputLayer(shape=(None,None), input_var=self.inps[3])
-        l_docmask = tf.keras.layers.Input(shape=(None,))
-        l_qmask = tf.keras.layers.Input(shape=(None,))
+        l_docmask = tf.keras.layers.Input(shape=(None,), dtype=int64)
+        l_qmask = tf.keras.layers.Input(shape=(None,), dtype=int64)
         #l_tokin = L.InputLayer(shape=(None,MAX_WORD_LEN), input_var=self.inps[8])
         #l_tokmask = L.InputLayer(shape=(None,MAX_WORD_LEN), input_var=self.inps[9])
-        l_featin = tf.keras.layers.Input(shape=(None,))
+        l_featin = tf.keras.layers.Input(shape=(None,), dtype=int64)
 
-        cand_var = tf.keras.layers.Input(shape=(None, None))
-        cloze_var = tf.keras.layers.Input(shape=(1,))
-        candmask_var = tf.keras.layers.Input(shape=(None,))
+        cand_var = tf.keras.layers.Input(shape=(None, None), dtype=int64)
+        cloze_var = tf.keras.layers.Input(shape=(1,), dtype=int64)
+        candmask_var = tf.keras.layers.Input(shape=(None,), dtype=int64)
 
         doc_shp = tf.shape(l_docin)
         qry_shp = tf.shape(l_qin)

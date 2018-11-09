@@ -47,13 +47,14 @@ def main(save_path, params):
     with tf.Graph().as_default():
         with tf.Session() as sess:
             K.set_session(sess)
-            m = GAReader.Model(nlayers, data.vocab_size, data.num_chars, W_init, 
-                    nhidden, embed_dim, dropout, train_emb, 
-                    char_dim, use_feat, gating_fn).build_network()
-            m.compile(optimizer=tf.train.AdamOptimizer(0.01),
-                      loss=tf.keras.losses.categorical_crossentropy,
-                      metrics=[tf.keras.metrics.categorical_accuracy])
-            m.fit_generator(generator=batch_loader_train, steps_per_epoch=len(batch_loader_train.batch_pool), epochs=100)
+            with tf.device('/gpu:0'):
+                m = GAReader.Model(nlayers, data.vocab_size, data.num_chars, W_init, 
+                        nhidden, embed_dim, dropout, train_emb, 
+                        char_dim, use_feat, gating_fn).build_network()
+                m.compile(optimizer=tf.train.AdamOptimizer(0.01),
+                          loss=tf.keras.losses.categorical_crossentropy,
+                          metrics=[tf.keras.metrics.categorical_accuracy])
+                m.fit_generator(generator=batch_loader_train, steps_per_epoch=len(batch_loader_train.batch_pool), epochs=100)
                     #validation_data=batch_loader_val, validation_steps=len(batch_loader_val.batch_pool))
     
     #print("training ...")

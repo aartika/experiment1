@@ -38,7 +38,7 @@ def main(save_path, params):
 
     print("running GAReader ...")
     with tf.Graph().as_default():
-        with tf.Session() as sess:
+        with tf.Session(config=tf.ConfigProto(allow_soft_placement = True)) as sess:
             K.set_session(sess)
             with tf.device('/gpu:0'):
                 m = GAReader.Model(nlayers, data.vocab_size, data.num_chars, W_init, 

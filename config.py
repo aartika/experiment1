@@ -15,7 +15,7 @@ MAX_WORD_LEN = 10
 
 # dataset params
 def get_params(dataset):
-    if dataset=='cbtcn':
+    if dataset=='data/cbt/cn':
         return cbtcn_params
     elif dataset=='wdw' or dataset=='wdw_relaxed':
         return wdw_params

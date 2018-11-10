@@ -29,7 +29,6 @@ def get_params(dataset):
         raise ValueError("Dataset %s not found"%dataset)
 
 cbtcn_params = {
-        'num_classes': 10
         'nhidden'    :   128,
         'char_dim'   :   25,
         'dropout'    :   0.4,

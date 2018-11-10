@@ -138,5 +138,5 @@ class MiniBatchLoader():
             n += 1
 
         self.ptr += 1
-
+        print(np.shape(a))
         return [[dt, qt, m_dw, m_qw, c, m_c, cl], to_categorical(a)]

@@ -112,7 +112,7 @@ class AttentionSumLayer(tf.keras.layers.Layer):
         print('indices ' + str(indices))
         q = tf.gather_nd(inputs[1], indices) # B x D
         p = tf.keras.backend.batch_dot(inputs[0], q) # B x N
-        p = tf.Print(p, [tf.shape(p), tf.shape(self.mask), tf.shape(inputs[0])], tf.shape(self.aggregator))
+        p = tf.Print(p, [tf.shape(p), tf.shape(self.mask), tf.shape(inputs[0]), tf.shape(self.aggregator)])
         pm = tf.nn.softmax(p)*self.mask # B x N
         pm = pm/tf.keras.backend.sum(pm, axis=1)[:,np.newaxis] # B x N
 

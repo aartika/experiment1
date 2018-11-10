@@ -29,12 +29,13 @@ def get_params(dataset):
         raise ValueError("Dataset %s not found"%dataset)
 
 cbtcn_params = {
-        'nhidden'   :   128,
-        'char_dim'  :   25,
-        'dropout'   :   0.4,
-        'word2vec'  :   'data/word2vec_glove.txt',
-        'train_emb' :   0,
-        'use_feat'  :   1,
+        'num_classes': 10
+        'nhidden'    :   128,
+        'char_dim'   :   25,
+        'dropout'    :   0.4,
+        'word2vec'   :   'data/word2vec_glove.txt',
+        'train_emb'  :   0,
+        'use_feat'   :   1,
         }
 
 wdw_params = {

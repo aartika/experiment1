@@ -8,6 +8,37 @@ from model import GAReader
 from utils import Helpers, DataPreprocessor, MiniBatchLoader
 import tensorflow as tf
 from keras import backend as K
+from keras.callbacks import TensorBoard, LearningRateScheduler
+from keras.utils import to_categorical
+
+class TensorBoardCustom(TensorBoard):
+
+    def __init__(self, log_dir, sess, words, **kwargs):
+        super(TensorBoardCustom, self).__init__(log_dir, **kwargs)
+        self.sess = sess
+        self.mapping_string = tf.constant(words)
+        self.l_docin = tf.Variable([0., 0.])
+
+    def _add_doc_summary(self):
+        with tf.name_scope('summaries'):
+            table = tf.contrib.lookup.index_to_string_table_from_tensor(
+                    self.mapping_string, default_value="UNKNOWN")
+            words = table.lookup(tf.cast(self.l_docin, tf.int64))
+            text = tf.reduce_join(words, 0, separator=' ')
+            tf.summary.text('text', text)
+
+    def on_batch_end(self, batch, logs={}):
+#        print(logs)
+#        print(self.model.variables)
+#        tf.assign(self.l_docin, self.model.inputs[0][0], validate_shape=False)
+#        self._add_doc_summary()
+        writer = tf.summary.FileWriter(self.log_dir)
+        lr = tf.summary.scalar('learning_rate', self.model.optimizer.lr)
+        summary = tf.summary.merge_all() 
+        s = self.sess.run(summary)
+        writer.add_summary(s, batch)
+        writer.close()
+        super(TensorBoardCustom, self).on_batch_end(batch, logs)
 
 def main(save_path, params):
 
@@ -20,6 +51,7 @@ def main(save_path, params):
     char_dim = params['char_dim']
     use_feat = params['use_feat']
     gating_fn = params['gating_fn']
+    out = 'out'
 
     # save settings
     shutil.copyfile('config.py','%s/config.py'%save_path)
@@ -27,6 +59,12 @@ def main(save_path, params):
     use_chars = char_dim>0
     dp = DataPreprocessor.DataPreprocessor()
     data = dp.preprocess(dataset, no_training_set=False, use_chars=use_chars)
+    word_dictionary = data.dictionary[0]
+    the_index = word_dictionary['the']
+    print('the index : {}'.format(word_dictionary['the']))
+
+    idx_to_word = dict([(v, k) for (k, v) in word_dictionary.iteritems()])
+    words = [idx_to_word[i] for i in sorted(idx_to_word.keys())]
 
     print("building minibatch loaders ...")
     batch_loader_train = MiniBatchLoader.MiniBatchLoader(data.training, BATCH_SIZE, 
@@ -35,20 +73,48 @@ def main(save_path, params):
 
     print("building network ...")
     W_init, embed_dim, = Helpers.load_word2vec_embeddings(data.dictionary[0], word2vec)
+    print('the embedding : {}'.format(W_init[the_index]))
+    print(W_init[0:5])
 
     print("running GAReader ...")
     with tf.Graph().as_default():
         with tf.Session(config=tf.ConfigProto(allow_soft_placement = True)) as sess:
-            K.set_session(sess)
-            with tf.device('/gpu:0'):
+                K.set_session(sess)
+                tf.train.create_global_step()
+                #with tf.device('/gpu:0:'):
                 m = GAReader.Model(nlayers, data.vocab_size, data.num_chars, W_init, 
                         nhidden, embed_dim, dropout, train_emb, 
-                        char_dim, use_feat, gating_fn).build_network()
-                m.compile(optimizer=tf.train.AdamOptimizer(0.01),
+                        char_dim, use_feat, gating_fn, words).build_network()
+                m.compile(optimizer=tf.keras.optimizers.Adam(lr=LEARNING_RATE, clipnorm=GRAD_CLIP),
                           loss=tf.keras.losses.categorical_crossentropy,
                           metrics=[tf.keras.metrics.categorical_accuracy])
-                m.fit_generator(generator=batch_loader_train, steps_per_epoch=len(batch_loader_train.batch_pool), epochs=100)
-                    #validation_data=batch_loader_val, validation_steps=len(batch_loader_val.batch_pool))
+                tensorboard = TensorBoardCustom(log_dir="logs", sess=sess, words=words)
+                writer = tf.summary.FileWriter("logs")
+                
+                def schedule(epoch, lr):
+                    if epoch >= 3:
+                        return lr * 0.5
+                    else:
+                        return lr
+                lrate = LearningRateScheduler(schedule, verbose=1)
+
+                #m.fit_generator(generator=batch_loader_train, steps_per_epoch=len(batch_loader_train.batch_pool), epochs=100, callbacks=[tensorboard, lrate])
+                #validation_data=batch_loader_val, validation_steps=len(batch_loader_val.batch_pool))
+                for (inputs, a) in batch_loader_train:
+                    [dw, qw, m_dw, m_qw, c, m_c, cl] = inputs
+                    print(dw.shape)
+                    print('dw : {}'.format(dw))
+                    print('qw : {}'.format(qw))
+                    print('m_dw : {}'.format(m_dw))
+                    print('m_qw : {}'.format(m_qw))
+                    print('c : {}'.format(c))
+                    print([idx_to_word[i] for i in dw[0, :, 0].tolist()])
+                    m.train_on_batch(inputs, to_categorical(a, batch_loader_train.max_num_cand))
+                    lr = tf.summary.scalar('learning_rate', LEARNING_RATE)
+                    summary = tf.summary.merge_all() 
+                    s = sess.run(summary)
+                    writer.add_summary(s)
+                writer.close()
     
     #print("training ...")
     #num_iter = 0

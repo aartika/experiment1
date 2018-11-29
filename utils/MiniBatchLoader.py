@@ -59,7 +59,7 @@ class MiniBatchLoader():
             k = n/self.batch_size if n % self.batch_size == 0 else n/self.batch_size+1
             ixs_list = [(ixs[self.batch_size*i:min(n, self.batch_size*(i+1))],l) for i in range(k)]
             self.batch_pool += ixs_list
-        print('batch pool len : {}'.format(len(self.batch_pool)))
+        #print('batch pool len : {}'.format(len(self.batch_pool)))
 
         # randomly shuffle the mini-batches
         if self.shuffle:
@@ -74,9 +74,9 @@ class MiniBatchLoader():
         ixs = self.batch_pool[self.ptr][0]
         curr_max_doc_len = self.batch_pool[self.ptr][1]
         curr_batch_size = len(ixs)
-        print('current batch size : {}'.format(curr_batch_size))
-        print('current max doc len: {}'.format(curr_max_doc_len))
-        print('max query len: {}'.format(self.max_qry_len))
+        #print('current batch size : {}'.format(curr_batch_size))
+        #print('current max doc len: {}'.format(curr_max_doc_len))
+        #print('max query len: {}'.format(self.max_qry_len))
 
         dw = np.zeros((curr_batch_size, curr_max_doc_len, 1), dtype='int32') # document words
         qw = np.zeros((curr_batch_size, self.max_qry_len, 1), dtype='int32') # query words
@@ -139,4 +139,5 @@ class MiniBatchLoader():
 
         self.ptr += 1
         print(np.shape(a))
-        return [[dt, qt, m_dw, m_qw, c, m_c, cl], to_categorical(a, self.max_num_cand)]
+        return [[dw, qw, m_dw, m_qw, c, m_c, cl], to_categorical(a, self.max_num_cand)]
+        #return [dw, qw, m_dw, m_qw, c, m_c, cl], a

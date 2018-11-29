@@ -90,8 +90,10 @@ class DataPreprocessor:
             vocab_fp.write('\n'.join(vocabularies))
             vocab_fp.close()
 
+         
+        vocabularies = ['$pad$']+vocabularies
         vocab_size = len(vocabularies)
-        word_dictionary = dict(zip(vocabularies, range(1, vocab_size + 1)))
+        word_dictionary = dict(zip(vocabularies, range(vocab_size)))
         char_set = set([c for w in vocabularies for c in list(w)])
         char_set.add(' ')
         char_dictionary = dict(zip(list(char_set), range(len(char_set))))

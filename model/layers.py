@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 
 def Tconcat(t1,t2):
-    return T.concatenate([t1,t2], axis=2)
+    return tf.keras.backend.concatenate([t1,t2], axis=2)
 
 def Tsum(t1,t2):
     return t1+t2
@@ -54,7 +54,7 @@ class GatedAttentionLayer(tf.keras.layers.Layer):
         q_rep = tf.keras.backend.batch_dot(alphas_r, inputs[1]) # B x N x D
     
         print('q_rep ' + str(q_rep))
-        return eval(self.gating_fn)([inputs[0],q_rep], 2)
+        return eval(self.gating_fn)(inputs[0],q_rep)
 
 class PairwiseInteractionLayer(tf.keras.layers.Layer):
     """
@@ -112,11 +112,11 @@ class AttentionSumLayer(tf.keras.layers.Layer):
         print('indices ' + str(indices))
         q = tf.gather_nd(inputs[1], indices) # B x D
         p = tf.keras.backend.batch_dot(inputs[0], q) # B x N
-        p = tf.Print(p, [tf.shape(p), tf.shape(self.mask), tf.shape(inputs[0]), tf.shape(self.aggregator)])
+        #p = tf.Print(p, [tf.shape(p), tf.shape(self.mask), tf.shape(inputs[0]), tf.shape(self.aggregator)])
         pm = tf.nn.softmax(p)*self.mask # B x N
         pm = pm/tf.keras.backend.sum(pm, axis=1)[:,np.newaxis] # B x N
 
-        return tf.keras.backend.batch_dot(pm, self.aggregator)
+        return tf.keras.backend.batch_dot(pm, self.aggregator, axes=[1, 1])
 
 #class BilinearAttentionLayer(L.MergeLayer):
 #    """

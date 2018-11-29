@@ -45,7 +45,7 @@ def load_word2vec_embeddings(dictionary, vocab_embed_file):
     n = 0
     for w, i in dictionary.iteritems():
         if w in vocab_embed:
-            W[i - 1,:] = vocab_embed[w]
+            W[i,:] = vocab_embed[w]
             n += 1
     print "%d/%d vocabs are initialized with word2vec embeddings." % (n, vocab_size)
     return W, embed_dim

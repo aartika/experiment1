@@ -2,6 +2,7 @@ import numpy as np
 import time
 import os
 import shutil
+import glob
 
 from config import *
 from model import GAReader
@@ -13,9 +14,8 @@ from keras.utils import to_categorical
 
 class TensorBoardCustom(TensorBoard):
 
-    def __init__(self, log_dir, sess, words, **kwargs):
+    def __init__(self, log_dir, words, **kwargs):
         super(TensorBoardCustom, self).__init__(log_dir, **kwargs)
-        self.sess = sess
         self.mapping_string = tf.constant(words)
         self.l_docin = tf.Variable([0., 0.])
 
@@ -35,8 +35,7 @@ class TensorBoardCustom(TensorBoard):
         writer = tf.summary.FileWriter(self.log_dir)
         lr = tf.summary.scalar('learning_rate', self.model.optimizer.lr)
         summary = tf.summary.merge_all() 
-        s = self.sess.run(summary)
-        writer.add_summary(s, batch)
+        writer.add_summary(summary.numpy(), batch)
         writer.close()
         super(TensorBoardCustom, self).on_batch_end(batch, logs)
 
@@ -77,43 +76,64 @@ def main(save_path, params):
     print(W_init[0:5])
 
     print("running GAReader ...")
+
+    m = GAReader.Model(nlayers, data.vocab_size, data.num_chars, W_init, 
+            nhidden, embed_dim, dropout, train_emb, 
+            char_dim, use_feat, gating_fn, words).build_network()
+    m.compile(optimizer=tf.keras.optimizers.Adam(lr=LEARNING_RATE, clipnorm=GRAD_CLIP),
+              loss=tf.keras.losses.categorical_crossentropy,
+              metrics=[tf.keras.metrics.categorical_accuracy])
+    saver = tf.train.Saver(m.weights, max_to_keep=1)
+    #tf.enable_eager_execution(config=tf.ConfigProto(allow_soft_placement = True))
     with tf.Graph().as_default():
         with tf.Session(config=tf.ConfigProto(allow_soft_placement = True)) as sess:
-                K.set_session(sess)
-                tf.train.create_global_step()
+            K.set_session(sess)
                 #with tf.device('/gpu:0:'):
-                m = GAReader.Model(nlayers, data.vocab_size, data.num_chars, W_init, 
-                        nhidden, embed_dim, dropout, train_emb, 
-                        char_dim, use_feat, gating_fn, words).build_network()
-                m.compile(optimizer=tf.keras.optimizers.Adam(lr=LEARNING_RATE, clipnorm=GRAD_CLIP),
-                          loss=tf.keras.losses.categorical_crossentropy,
-                          metrics=[tf.keras.metrics.categorical_accuracy])
-                tensorboard = TensorBoardCustom(log_dir="logs", sess=sess, words=words)
-                writer = tf.summary.FileWriter("logs")
+            ckpts = glob.glob('output/weights*.hd5')
+            if len(ckpts) > 0:
+                ckpts = sorted(ckpts)
+                print('loading model from checkpoint : {}'.format(ckpts[-1]))
+                saver.restore(sess, ckpts[-1])
+                print(m.get_weights()[0])
+            tensorboard = TensorBoardCustom(log_dir="logs", words=words)
+            modelcheckpoint = tf.keras.callbacks.ModelCheckpoint('output/weights.{epoch:02d}-{val_loss:.2f}.hdf5')
+            writer = tf.summary.FileWriter("logs")
+            
+            def schedule(epoch, lr):
                 
-                def schedule(epoch, lr):
-                    if epoch >= 3:
-                        return lr * 0.5
-                    else:
-                        return lr
-                lrate = LearningRateScheduler(schedule, verbose=1)
+                if epoch >= 3:
+                    return lr * 0.5
+                else:
+                    return lr
+            lrate = LearningRateScheduler(schedule, verbose=1)
 
-                #m.fit_generator(generator=batch_loader_train, steps_per_epoch=len(batch_loader_train.batch_pool), epochs=100, callbacks=[tensorboard, lrate])
-                #validation_data=batch_loader_val, validation_steps=len(batch_loader_val.batch_pool))
+            #m.fit_generator(generator=batch_loader_train, steps_per_epoch=len(batch_loader_train.batch_pool), epochs=NUM_EPOCHS, 
+            #        callbacks=[tensorboard, lrate, modelcheckpoint], validation_data=batch_loader_val, validation_steps=len(batch_loader_val.batch_pool))
+            for epoch in xrange(NUM_EPOCHS):
                 for (inputs, a) in batch_loader_train:
                     [dw, qw, m_dw, m_qw, c, m_c, cl] = inputs
-                    print(dw.shape)
-                    print('dw : {}'.format(dw))
-                    print('qw : {}'.format(qw))
-                    print('m_dw : {}'.format(m_dw))
-                    print('m_qw : {}'.format(m_qw))
-                    print('c : {}'.format(c))
-                    print([idx_to_word[i] for i in dw[0, :, 0].tolist()])
-                    m.train_on_batch(inputs, to_categorical(a, batch_loader_train.max_num_cand))
+                    m = GAReader.Model(max_doc_len, max_qry_len, nlayers, data.vocab_size, data.num_chars, W_init, 
+                            nhidden, embed_dim, dropout, train_emb, 
+                            char_dim, use_feat, gating_fn, words).build_network()
+                    m.compile(optimizer=tf.keras.optimizers.Adam(lr=LEARNING_RATE, clipnorm=GRAD_CLIP),
+                              loss=tf.keras.losses.categorical_crossentropy,
+                              metrics=[tf.keras.metrics.categorical_accuracy])
+                    #print(dw.shape)
+                    #print('dw : {}'.format(dw))
+                    #print('qw : {}'.format(qw))
+                    #print('m_dw : {}'.format(m_dw))
+                    #print('m_qw : {}'.format(m_qw))
+                    #print('c : {}'.format(c))
+                    #print([idx_to_word[i] for i in dw[0, :, 0].tolist()])
+                    train_summary = m.train_on_batch(inputs, to_categorical(a, batch_loader_train.max_num_cand))
+                    print(m.get_weights()[0])
+                    print('epoch: {}, train loss: {}, train acc: {}'.format(epoch, train_summary[0], train_summary[1]))
                     lr = tf.summary.scalar('learning_rate', LEARNING_RATE)
                     summary = tf.summary.merge_all() 
                     s = sess.run(summary)
                     writer.add_summary(s)
+                saver.save(sess, 'output/weights.epoch_{:02}-val_loss_{:03.2f}.ckpt'.format(epoch, 0.0))
+                #m.save_weights('output/weights.epoch:{:2}-val_loss:{:.2}.hdf5'.format(epoch, 0.0))
                 writer.close()
     
     #print("training ...")

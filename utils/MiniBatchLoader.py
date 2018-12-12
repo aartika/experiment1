@@ -9,7 +9,7 @@ class MiniBatchLoader():
 
     def __init__(self, questions, batch_size, shuffle=True, sample=1.0):
         self.batch_size = batch_size
-        print('batch size : {}'.format(batch_size))
+        #print('batch size : {}'.format(batch_size))
         if sample==1.0: self.questions = questions
         else: self.questions = random.sample(questions, 
                 int(sample*len(questions)))
@@ -69,7 +69,7 @@ class MiniBatchLoader():
         """load the next batch"""
         if self.ptr == len(self.batch_pool):
             self.reset()
-            #raise StopIteration()
+            raise StopIteration()
 
         ixs = self.batch_pool[self.ptr][0]
         curr_max_doc_len = self.batch_pool[self.ptr][1]
@@ -138,6 +138,6 @@ class MiniBatchLoader():
             n += 1
 
         self.ptr += 1
-        print(np.shape(a))
-        return [[dw, qw, m_dw, m_qw, c, m_c, cl], to_categorical(a, self.max_num_cand)]
-        #return [dw, qw, m_dw, m_qw, c, m_c, cl], a
+        #print(np.shape(a))
+        #return [[dw, qw, m_dw, m_qw, c, m_c, cl], to_categorical(a, self.max_num_cand)]
+        return [dw, qw, m_dw, m_qw, c, m_c, cl], a

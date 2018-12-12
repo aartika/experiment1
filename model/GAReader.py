@@ -89,22 +89,22 @@ class Model():
     #            tt, tm.astype('int8'), 
     #            m_c.astype('int8'), f, cl)
 
-    def build_network(self):
-        l_docin = tf.keras.layers.Input(shape=(None, 1))
+    def build_network(self, max_doc_len, max_qry_len, max_num_cand):
+        l_docin = tf.keras.layers.Input(shape=(max_doc_len, 1))
         #l_docin = tf.keras.layers.Lambda(lambda x: tf.Print(x, [x]), output_shape=lambda s:s)(l_docin)
         #l_docin = tf.keras.layers.Lambda(lambda x: tf.Print(x, [x]))(l_docin)
         #l_doctokin = L.InputLayer(shape=(None,None), input_var=self.inps[1])
-        l_qin = tf.keras.layers.Input(shape=(None, 1))
+        l_qin = tf.keras.layers.Input(shape=(max_qry_len, 1))
         #l_qtokin = L.InputLayer(shape=(None,None), input_var=self.inps[3])
-        l_docmask = tf.keras.layers.Input(shape=(None,))
-        l_qmask = tf.keras.layers.Input(shape=(None,))
+        l_docmask = tf.keras.layers.Input(shape=(max_doc_len,))
+        l_qmask = tf.keras.layers.Input(shape=(max_qry_len,))
         #l_tokin = L.InputLayer(shape=(None,MAX_WORD_LEN), input_var=self.inps[8])
         #l_tokmask = L.InputLayer(shape=(None,MAX_WORD_LEN), input_var=self.inps[9])
         l_featin = tf.keras.layers.Input(shape=(None,))
 
-        cand_var = tf.keras.layers.Input(shape=(None, None))
+        cand_var = tf.keras.layers.Input(shape=(max_doc_len, max_num_cand))
         cloze_var = tf.keras.layers.Input(shape=(1,))
-        candmask_var = tf.keras.layers.Input(shape=(None,))
+        candmask_var = tf.keras.layers.Input(shape=(max_doc_len,))
 
         doc_shp = tf.shape(l_docin)
         qry_shp = tf.shape(l_qin)

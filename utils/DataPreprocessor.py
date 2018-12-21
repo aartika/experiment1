@@ -2,6 +2,7 @@ import numpy as np
 import glob
 import os
 import sys
+import cPickle as pickle
 
 from config import MAX_WORD_LEN
 
@@ -34,8 +35,13 @@ class DataPreprocessor:
         if no_training_set:
             training = None
         else:
-            print "preparing training data ..."
-            training = self.parse_all_files(question_dir + "/training", dictionary, use_chars)
+            if os.path.exists(question_dir + "/training.pkl"):
+                with open(question_dir + "/training.pkl", "rb") as f:
+                    training = pickle.load(f)
+            else:
+                print "preparing training data ..."
+                training = self.parse_all_files(question_dir + "/training", dictionary, use_chars)
+                pickle.dump(training, open(question_dir + "/training.pkl", "wb"))
         print "preparing validation data ..."
         validation = self.parse_all_files(question_dir + "/validation", dictionary, use_chars)
         print "preparing test data ..."

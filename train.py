@@ -107,8 +107,6 @@ def main(save_path, params):
                     return lr
             lrate = LearningRateScheduler(schedule, verbose=1)
 
-            #m.fit_generator(generator=batch_loader_train, steps_per_epoch=len(batch_loader_train.batch_pool), epochs=NUM_EPOCHS, 
-            #        callbacks=[tensorboard, lrate, modelcheckpoint], validation_data=batch_loader_val, validation_steps=len(batch_loader_val.batch_pool))
             for epoch in xrange(NUM_EPOCHS):
                 for (inputs, a) in batch_loader_train:
                     [dw, qw, m_dw, m_qw, c, m_c, cl] = inputs
@@ -136,68 +134,3 @@ def main(save_path, params):
                 #m.save_weights('output/weights.epoch:{:2}-val_loss:{:.2}.hdf5'.format(epoch, 0.0))
                 writer.close()
     
-    #print("training ...")
-    #num_iter = 0
-    #max_acc = 0.
-    #deltas = []
-
-    #logger = open(save_path+'/log','a',0)
-
-    #if os.path.isfile('%s/best_model.p'%save_path):
-    #    print('loading previously saved model')
-    #    m.load_model('%s/best_model.p'%save_path)
-    #else:
-    #    print('saving init model')
-    #    m.save_model('%s/model_init.p'%save_path)
-    #    print('loading init model')
-    #    m.load_model('%s/model_init.p'%save_path)
-
-    #for epoch in xrange(NUM_EPOCHS):
-    #    estart = time.time()
-    #    new_max = False
-
-    #    for dw, dt, qw, qt, a, m_dw, m_qw, tt, tm, c, m_c, cl, fnames in batch_loader_train:
-    #        loss, tr_acc, probs = m.train(dw, dt, qw, qt, c, a, m_dw, m_qw, tt, tm, m_c, cl)
-
-    #        message = "Epoch %d TRAIN loss=%.4e acc=%.4f elapsed=%.1f" % (
-    #                epoch, loss, tr_acc, time.time()-estart)
-    #        print message
-    #        logger.write(message+'\n')
-
-    #        num_iter += 1
-    #        if num_iter % VALIDATION_FREQ == 0:
-    #            total_loss, total_acc, n, n_cand = 0., 0., 0, 0.
-
-    #            for dw, dt, qw, qt, a, m_dw, m_qw, tt, tm, c, m_c, cl, fnames in batch_loader_val:
-    #                outs = m.validate(dw, dt, qw, qt, c, a, 
-    #                        m_dw, m_qw, tt, tm, m_c, cl)
-    #                loss, acc, probs = outs[:3]
-
-    #                bsize = dw.shape[0]
-    #                total_loss += bsize*loss
-    #                total_acc += bsize*acc
-    #                n += bsize
-
-    #    	val_acc = total_acc/n
-    #            if val_acc > max_acc:
-    #                max_acc = val_acc
-    #                m.save_model('%s/best_model.p'%save_path)
-    #                new_max = True
-    #            message = "Epoch %d VAL loss=%.4e acc=%.4f max_acc=%.4f" % (
-    #                epoch, total_loss/n, val_acc, max_acc)
-    #            print message
-    #            logger.write(message+'\n')
-
-    #    m.save_model('%s/model_%d.p'%(save_path,epoch))
-    #    message = "After Epoch %d: Train acc=%.4f, Val acc=%.4f" % (epoch, tr_acc, val_acc)
-    #    print message
-    #    logger.write(message+'\n')
-    #    
-    #    # learning schedule
-    #    if epoch >=2:
-    #        m.anneal()
-    #    # stopping criterion
-    #    if not new_max:
-    #        break
-
-    #logger.close()

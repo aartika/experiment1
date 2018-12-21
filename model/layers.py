@@ -19,8 +19,6 @@ class GatedAttentionLayer(tf.keras.layers.Layer):
     def __init__(self, gating_fn='T.mul', mask_input=None, transpose=False, **kwargs):
         super(GatedAttentionLayer, self).__init__(**kwargs)
 	self.gating_fn = gating_fn
-        #if mask_input is not None and type(mask_input).__name__!='TensorVariable': 
-        #    raise TypeError('Mask input must be theano tensor variable')
         self.mask = mask_input
         self.transpose = transpose
 
@@ -90,8 +88,6 @@ class AttentionSumLayer(tf.keras.layers.Layer):
 
     def __init__(self, aggregator, pointer, mask_input=None, **kwargs):
         super(AttentionSumLayer, self).__init__(**kwargs)
-        #if mask_input is not None and type(mask_input).__name__!='TensorVariable': 
-        #    raise TypeError('Mask input must be theano tensor variable')
         self.mask = mask_input
         self.aggregator = aggregator
         self.pointer = tf.cast(pointer, tf.int32)
@@ -112,61 +108,8 @@ class AttentionSumLayer(tf.keras.layers.Layer):
         print('indices ' + str(indices))
         q = tf.gather_nd(inputs[1], indices) # B x D
         p = tf.keras.backend.batch_dot(inputs[0], q) # B x N
-        #p = tf.Print(p, [tf.shape(p), tf.shape(self.mask), tf.shape(inputs[0]), tf.shape(self.aggregator)])
         pm = tf.nn.softmax(p)*self.mask # B x N
         pm = pm/tf.keras.backend.sum(pm, axis=1)[:,np.newaxis] # B x N
 
         return tf.keras.backend.batch_dot(pm, self.aggregator, axes=[1, 1])
 
-#class BilinearAttentionLayer(L.MergeLayer):
-#    """
-#    Layer which implements the bilinear attention described in Stanfor AR (Chen, 2016).
-#    Takes a 3D tensor P and a 2D tensor Q as input, outputs  a 2D tensor which is Ps 
-#    weighted average along the second dimension, and weights are q_i^T W p_i attention 
-#    vectors for each element in batch of P and Q. 
-#    If mask_input is provided it will be applied to the output attention vectors before
-#    averaging. Mask input should be theano variable and not lasagne layer.
-#    """
-#
-#    def __init__(self, incomings, num_units, W=lasagne.init.Uniform(), 
-#            mask_input=None, **kwargs):
-#        super(BilinearAttentionLayer, self).__init__(incomings, **kwargs)
-#        self.num_units = num_units
-#        if mask_input is not None and type(mask_input).__name__!='TensorVariable': 
-#            raise TypeError('Mask input must be theano tensor variable')
-#        self.mask = mask_input
-#        self.W = self.add_param(W, (num_units, num_units), name='W')
-#
-#    def get_output_shape_for(self, input_shapes):
-#        return (input_shapes[0][0], input_shapes[0][2])
-#
-#    def get_output_for(self, inputs, **kwargs):
-#
-#        # inputs[0]: # B x N x H
-#        # inputs[1]: # B x H
-#        # self.W: H x H
-#        # self.mask: # B x N
-#
-#        qW = T.dot(inputs[1], self.W) # B x H
-#        qWp = (inputs[0]*qW[:,np.newaxis,:]).sum(axis=2)
-#        alphas = T.nnet.softmax(qWp)
-#        if self.mask is not None:
-#            alphas = alphas*self.mask
-#            alphas = alphas/alphas.sum(axis=1)[:,np.newaxis]
-#        return (inputs[0]*alphas[:,:,np.newaxis]).sum(axis=1)
-#
-#class IndexLayer(L.MergeLayer):
-#    """
-#    Layer which takes two inputs: a tensor D with arbitrary shape, and integer values,
-#    and a 2D lookup tensor whose rows are indices in D. Returns the first tensor with
-#    its each value replaced by the lookup from second tensor. This is similar to 
-#    EmbeddingLayer, but the lookup matrix is not a parameter, and can be of arbitrary
-#    size
-#    """
-#
-#    def get_output_shape_for(self, input_shapes):
-#        return input_shapes[0] + (input_shapes[1][-1],)
-#
-#    def get_output_for(self, inputs, **kwargs):
-#        return inputs[1][inputs[0]]
-#

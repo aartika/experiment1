@@ -31,75 +31,12 @@ class Model():
 
         self.use_chars = self.char_dim!=0
         self.mapping_string = tf.constant(words)
-        #if W_init is None: W_init = lasagne.init.GlorotNormal().sample((vocab_size, self.embed_dim))
-
-        #doc_var, query_var, cand_var = T.itensor3('doc'), T.itensor3('quer'), \
-        #        T.wtensor3('cand')
-        #docmask_var, qmask_var, candmask_var = T.bmatrix('doc_mask'), T.bmatrix('q_mask'), \
-        #        T.bmatrix('c_mask')
-        #target_var = T.ivector('ans')
-        #feat_var = T.imatrix('feat')
-        #doc_toks, qry_toks= T.imatrix('dchars'), T.imatrix('qchars')
-        #tok_var, tok_mask = T.imatrix('tok'), T.bmatrix('tok_mask')
-        #cloze_var = T.ivector('cloze')
-        #self.inps = [doc_var, doc_toks, query_var, qry_toks, cand_var, target_var, docmask_var,
-        #        qmask_var, tok_var, tok_mask, candmask_var, feat_var, cloze_var]
-
-        #self.predicted_probs, predicted_probs_val, self.network, W_emb, attentions = (
-        #        self.build_network(K, vocab_size, W_init))
-
-        #self.loss_fn = tf.keras.backend.categorical_crossentropy(target_var, self.predicted_probs).mean()
-        #self.eval_fn = tf.keras.metrics.categorical_accuracy(target_var, self.predicted_probs, 
-        #        target_var).mean()
-
-        #loss_fn_val = tf.keras.backend.categorical_crossentropy(target_var, predicted_probs_val).mean()
-        #eval_fn_val = tf.keras.metrics.categorical_accuracy(target_var, predicted_probs_val).mean()
-
-        #self.params = L.get_all_params(self.network, trainable=True)
-        #
-        #updates = lasagne.updates.adam(self.loss_fn, self.params, learning_rate=self.learning_rate)
-
-        #self.train_fn = theano.function(self.inps,
-        #        [self.loss_fn, self.eval_fn, self.predicted_probs], 
-        #        updates=updates,
-        #        on_unused_input='warn')
-        #self.validate_fn = theano.function(self.inps, 
-        #        [loss_fn_val, eval_fn_val, predicted_probs_val]+attentions,
-        #        on_unused_input='warn')
-
-    #def anneal(self):
-    #    self.learning_rate /= 2
-    #    updates = lasagne.updates.adam(self.loss_fn, self.params, learning_rate=self.learning_rate)
-    #    self.train_fn = theano.function(self.inps, \
-    #            [self.loss_fn, self.eval_fn, self.predicted_probs], 
-    #            updates=updates,
-    #            on_unused_input='warn')
-
-    #def train(self, dw, dt, qw, qt, c, a, m_dw, m_qw, tt, tm, m_c, cl):
-    #    f = prepare_input(dw,qw)
-    #    return self.train_fn(dw, dt, qw, qt, c, a, 
-    #            m_dw.astype('int8'), m_qw.astype('int8'), 
-    #            tt, tm.astype('int8'), 
-    #            m_c.astype('int8'), f, cl)
-
-    #def validate(self, dw, dt, qw, qt, c, a, m_dw, m_qw, tt, tm, m_c, cl):
-    #    f = prepare_input(dw,qw)
-    #    return self.validate_fn(dw, dt, qw, qt, c, a, 
-    #            m_dw.astype('int8'), m_qw.astype('int8'), 
-    #            tt, tm.astype('int8'), 
-    #            m_c.astype('int8'), f, cl)
 
     def build_network(self, max_doc_len, max_qry_len, max_num_cand):
         l_docin = tf.keras.layers.Input(shape=(max_doc_len, 1))
-        #l_docin = tf.keras.layers.Lambda(lambda x: tf.Print(x, [x]), output_shape=lambda s:s)(l_docin)
-        #l_docin = tf.keras.layers.Lambda(lambda x: tf.Print(x, [x]))(l_docin)
-        #l_doctokin = L.InputLayer(shape=(None,None), input_var=self.inps[1])
         l_qin = tf.keras.layers.Input(shape=(max_qry_len, 1))
-        #l_qtokin = L.InputLayer(shape=(None,None), input_var=self.inps[3])
         l_docmask = tf.keras.layers.Input(shape=(max_doc_len,))
         l_qmask = tf.keras.layers.Input(shape=(max_qry_len,))
-        #l_tokin = L.InputLayer(shape=(None,MAX_WORD_LEN), input_var=self.inps[8])
-        #l_tokmask = L.InputLayer(shape=(None,MAX_WORD_LEN), input_var=self.inps[9])
         l_featin = tf.keras.layers.Input(shape=(None,))
 
         cand_var = tf.keras.layers.Input(shape=(max_doc_len, max_num_cand))
@@ -122,33 +59,6 @@ class Model():
         l_fembed = tf.keras.layers.Embedding(input_dim=2, output_dim=2)(l_featin) # B x N x 2
         
         normal = tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.1, seed=None)
-
-        #if self.train_emb==0: 
-        #    l_docembed.params[l_docembed.W].remove('trainable')
-        #    l_qemb.params[l_qemb.W].remove('trainable')
-
-        # char embeddings
-        #if self.use_chars:
-        #    l_lookup = L.EmbeddingLayer(l_tokin, self.num_chars, self.char_dim) # T x L x D
-        #    l_fgru = L.GRULayer(l_lookup, self.char_dim, grad_clipping=GRAD_CLIP, 
-        #            mask_input=l_tokmask, gradient_steps=GRAD_STEPS, precompute_input=True,
-        #            only_return_final=True)
-        #    l_bgru = L.GRULayer(l_lookup, self.char_dim, grad_clipping=GRAD_CLIP, 
-        #            mask_input=l_tokmask, gradient_steps=GRAD_STEPS, precompute_input=True, 
-        #            backwards=True, only_return_final=True) # T x 2D
-        #    l_fwdembed = L.DenseLayer(l_fgru, self.embed_dim/2, nonlinearity=None) # T x DE/2
-        #    l_bckembed = L.DenseLayer(l_bgru, self.embed_dim/2, nonlinearity=None) # T x DE/2
-        #    l_embed = L.ElemwiseSumLayer([l_fwdembed, l_bckembed], coeffs=1)
-        #    l_docchar_embed = IndexLayer([l_doctokin, l_embed]) # B x N x DE/2
-        #    l_qchar_embed = IndexLayer([l_qtokin, l_embed]) # B x Q x DE/2
-
-        #    l_doce = L.ConcatLayer([l_doce, l_docchar_embed], axis=2)
-        #    l_qembed = L.ConcatLayer([l_qembed, l_qchar_embed], axis=2)
-
-        #attentions = []
-        #if self.save_attn:
-        #    l_m = PairwiseInteractionLayer([l_doce,l_qembed])
-        #    attentions.append(L.get_output(l_m, deterministic=True))
 
         for i in range(self.K-1):
 
@@ -178,10 +88,6 @@ class Model():
                     gating_fn=self.gating_fn, 
                     mask_input=l_qmask)([l_doc_1, l_q_c_1, l_m])
             l_doce = tf.keras.layers.Dropout(rate=self.dropout)(l_doc_2_in) # B x N x DE
-            #if self.save_attn: 
-            #    attentions.append(L.get_output(l_m, deterministic=True))
-
-        #if self.use_feat: l_doce = tf.keras.layers.Concatenate(axis=2)([l_doce, l_fembed])# B x N x DE+2
 
         # final layer
         l_doce = tf.keras.layers.Masking(mask_value=0.)(l_doce)
@@ -196,16 +102,10 @@ class Model():
                 return_sequences=True, implementation=2)(l_qembed)
         l_q = tf.keras.layers.Concatenate(axis=2)([l_fwd_q, l_bkd_q]) # B x Q x 2D
 
-        #if self.save_attn:
-        #    l_m = PairwiseInteractionLayer()([l_doc, l_q])
-        #    attentions.append(L.get_output(l_m, deterministic=True))
-
         l_doc = tf.keras.layers.Lambda(lambda x: x, output_shape=lambda s:s)(l_doc)
         l_q = tf.keras.layers.Lambda(lambda x: x, output_shape=lambda s:s)(l_q)
         l_prob = AttentionSumLayer(cand_var, cloze_var, mask_input=candmask_var)([l_doc, l_q])
 
-        #final = L.get_output(l_prob)
-        #final_v = L.get_output(l_prob, deterministic=True)
         return tf.keras.Model(inputs=[l_docin, l_qin, l_docmask, l_qmask,
             cand_var, candmask_var, cloze_var], outputs=l_prob)
 

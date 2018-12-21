@@ -32,16 +32,16 @@ class Model():
         self.use_chars = self.char_dim!=0
         self.mapping_string = tf.constant(words)
 
-    def build_network(self, max_doc_len, max_qry_len, max_num_cand):
-        l_docin = tf.keras.layers.Input(shape=(max_doc_len, 1))
-        l_qin = tf.keras.layers.Input(shape=(max_qry_len, 1))
-        l_docmask = tf.keras.layers.Input(shape=(max_doc_len,))
-        l_qmask = tf.keras.layers.Input(shape=(max_qry_len,))
+    def build_network(self):
+        l_docin = tf.keras.layers.Input(shape=(None, 1))
+        l_qin = tf.keras.layers.Input(shape=(None, 1))
+        l_docmask = tf.keras.layers.Input(shape=(None,))
+        l_qmask = tf.keras.layers.Input(shape=(None,))
         l_featin = tf.keras.layers.Input(shape=(None,))
 
-        cand_var = tf.keras.layers.Input(shape=(max_doc_len, max_num_cand))
+        cand_var = tf.keras.layers.Input(shape=(None, None))
         cloze_var = tf.keras.layers.Input(shape=(1,))
-        candmask_var = tf.keras.layers.Input(shape=(max_doc_len,))
+        candmask_var = tf.keras.layers.Input(shape=(None,))
 
         doc_shp = tf.shape(l_docin)
         qry_shp = tf.shape(l_qin)

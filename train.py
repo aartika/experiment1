@@ -110,7 +110,7 @@ def main(save_path, params):
             for epoch in xrange(NUM_EPOCHS):
                 for (inputs, a) in batch_loader_train:
                     [dw, qw, m_dw, m_qw, c, m_c, cl] = inputs
-                    m = GAReader.Model(max_doc_len, max_qry_len, nlayers, data.vocab_size, data.num_chars, W_init, 
+                    m = GAReader.Model(nlayers, data.vocab_size, data.num_chars, W_init, 
                             nhidden, embed_dim, dropout, train_emb, 
                             char_dim, use_feat, gating_fn, words).build_network()
                     m.compile(optimizer=tf.keras.optimizers.Adam(lr=LEARNING_RATE, clipnorm=GRAD_CLIP),

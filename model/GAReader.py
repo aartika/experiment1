@@ -67,19 +67,19 @@ class Model():
             l_bkd_doc_1 = tf.keras.layers.GRU(self.nhidden, go_backwards=True, 
                     return_sequences=True, implementation=2)(l_doce)
 
-            print('l_bkd_doc_1 ' + str(l_bkd_doc_1))
+            #print('l_bkd_doc_1 ' + str(l_bkd_doc_1))
             l_doc_1 = tf.keras.layers.Concatenate(axis=2)([l_fwd_doc_1, l_bkd_doc_1]) # B x N x DE
-            print('l_doc_1 ' + str(l_doc_1))
+            #print('l_doc_1 ' + str(l_doc_1))
 
             l_qembed = tf.keras.layers.Masking(mask_value=0.)(l_qembed)
             l_fwd_q_1 = tf.keras.layers.GRU(self.nhidden, return_sequences=True, implementation=2)(l_qembed)
             l_bkd_q_1 = tf.keras.layers.GRU(self.nhidden, go_backwards=True, 
                     return_sequences=True, implementation=2)(l_qembed)
 
-            print('l_bkd_q_1 ' + str(l_bkd_q_1))
+            #print('l_bkd_q_1 ' + str(l_bkd_q_1))
 
             l_q_c_1 = tf.keras.layers.Concatenate(axis=2)([l_fwd_q_1, l_bkd_q_1]) # B x Q x DE
-            print('l_q_c_1 ' + str(l_q_c_1))
+            #print('l_q_c_1 ' + str(l_q_c_1))
 
             l_doc_1 = tf.keras.layers.Lambda(lambda x: x, output_shape=lambda s:s)(l_doc_1)
             l_q_c_1 = tf.keras.layers.Lambda(lambda x: x, output_shape=lambda s:s)(l_q_c_1)

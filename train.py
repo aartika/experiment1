@@ -60,7 +60,7 @@ def main(save_path, params):
     data = dp.preprocess(dataset, no_training_set=False, use_chars=use_chars)
     word_dictionary = data.dictionary[0]
     the_index = word_dictionary['the']
-    print('the index : {}'.format(word_dictionary['the']))
+    #print('the index : {}'.format(word_dictionary['the']))
 
     idx_to_word = dict([(v, k) for (k, v) in word_dictionary.iteritems()])
     words = [idx_to_word[i] for i in sorted(idx_to_word.keys())]
@@ -72,8 +72,8 @@ def main(save_path, params):
 
     print("building network ...")
     W_init, embed_dim, = Helpers.load_word2vec_embeddings(data.dictionary[0], word2vec)
-    print('the embedding : {}'.format(W_init[the_index]))
-    print(W_init[0:5])
+    #print('the embedding : {}'.format(W_init[the_index]))
+    #print(W_init[0:5])
 
     print("running GAReader ...")
 
@@ -83,18 +83,11 @@ def main(save_path, params):
     m.compile(optimizer=tf.keras.optimizers.Adam(lr=LEARNING_RATE, clipnorm=GRAD_CLIP),
               loss=tf.keras.losses.categorical_crossentropy,
               metrics=[tf.keras.metrics.categorical_accuracy])
-    saver = tf.train.Saver(m.weights, max_to_keep=1)
     #tf.enable_eager_execution(config=tf.ConfigProto(allow_soft_placement = True))
     with tf.Graph().as_default():
         with tf.Session(config=tf.ConfigProto(allow_soft_placement = True)) as sess:
             K.set_session(sess)
                 #with tf.device('/gpu:0:'):
-            ckpts = glob.glob('output/weights*.hd5')
-            if len(ckpts) > 0:
-                ckpts = sorted(ckpts)
-                print('loading model from checkpoint : {}'.format(ckpts[-1]))
-                saver.restore(sess, ckpts[-1])
-                print(m.get_weights()[0])
             tensorboard = TensorBoardCustom(log_dir="logs", words=words)
             modelcheckpoint = tf.keras.callbacks.ModelCheckpoint('output/weights.{epoch:02d}-{val_loss:.2f}.hdf5')
             writer = tf.summary.FileWriter("logs")
@@ -130,7 +123,5 @@ def main(save_path, params):
                     summary = tf.summary.merge_all() 
                     s = sess.run(summary)
                     writer.add_summary(s)
-                saver.save(sess, 'output/weights.epoch_{:02}-val_loss_{:03.2f}.ckpt'.format(epoch, 0.0))
-                #m.save_weights('output/weights.epoch:{:2}-val_loss:{:.2}.hdf5'.format(epoch, 0.0))
                 writer.close()
     

@@ -37,21 +37,13 @@ class GatedAttentionLayer(tf.keras.layers.Layer):
 
         if self.transpose: M = tf.transpose(inputs[2], (0, 2, 1))
         else: M = inputs[2]
-        print('inputs[2] ' + str(inputs[2]))
         M_shape = tf.shape(M)
         alphas = tf.nn.softmax(tf.reshape(M, [M_shape[0]*M_shape[1],M_shape[2]]))
-        print('alphas ' + str(alphas))
-        print('M_shape ' + str(M_shape))
         alphas = tf.reshape(alphas, M_shape)
-        print('alphas ' + str(alphas))
-        print('self.mask ' + str(self.mask))
         alphas_r = tf.multiply(alphas, self.mask[:,np.newaxis,:]) # B x N x Q
-        print('alphas_r ' + str(alphas_r))
         alphas_r = tf.divide(alphas_r, tf.keras.backend.sum(alphas_r, axis=2)[:,:,np.newaxis]) # B x N x Q
-        print('alphas_r ' + str(alphas_r))
         q_rep = tf.keras.backend.batch_dot(alphas_r, inputs[1]) # B x N x D
     
-        print('q_rep ' + str(q_rep))
         return eval(self.gating_fn)(inputs[0],q_rep)
 
 class PairwiseInteractionLayer(tf.keras.layers.Layer):
@@ -72,10 +64,7 @@ class PairwiseInteractionLayer(tf.keras.layers.Layer):
         # inputs[1]: B x Q x D
         # self.mask: B x Q
 
-        print(inputs[0])
-        print(inputs[1])
         q_shuf = tf.transpose(inputs[1], (0, 2, 1)) # B x D x Q
-        print(q_shuf)
         return tf.keras.backend.batch_dot(inputs[0], q_shuf, axes=[2, 1]) # B x N x Q
 
 class AttentionSumLayer(tf.keras.layers.Layer):
@@ -105,7 +94,6 @@ class AttentionSumLayer(tf.keras.layers.Layer):
 
         batch_size = tf.shape(inputs[1])[0]
         indices = tf.concat([tf.reshape(tf.range(batch_size), [batch_size, 1]), self.pointer], axis=1)
-        print('indices ' + str(indices))
         q = tf.gather_nd(inputs[1], indices) # B x D
         p = tf.keras.backend.batch_dot(inputs[0], q) # B x N
         pm = tf.nn.softmax(p)*self.mask # B x N
